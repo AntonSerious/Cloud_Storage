@@ -29,8 +29,9 @@ public class ClientHandler implements Runnable{
                     System.out.println("command is coming from client: #message");
                     message(out, in);
                 }
-                if("download".equals(command)){
-                    //TODO:
+                if("#download".equals(command)){
+                    System.out.println("command is coming from client: #download");
+                    download(out, in);
                 }
 
                 if("#closeConnection".equals(command)){
@@ -49,6 +50,40 @@ public class ClientHandler implements Runnable{
         catch (Exception e){
             e.printStackTrace();
         }
+    }
+
+    private void download(DataOutputStream out, DataInputStream in) throws IOException {
+        try {
+            String filename = in.readUTF(); //Принимаем от клиента имя файла для скачивания
+            System.out.println("Request of downloading the file: " + filename);
+
+            File file = new File("Server/server_files/"+ filename);
+            if(!file.exists()){
+                out.writeLong(-1);
+                throw new FileNotFoundException();
+            }
+            long fileLength = file.length();
+
+            out.writeLong(fileLength); //Отправляем на клиент размер файла
+
+            System.out.println("Sending the file...");
+            FileInputStream fis = new FileInputStream(file); //Отправялем сам файл
+            int read = 0;
+            byte[] buffer = new byte[8 * 1024];
+            while((read = fis.read(buffer)) != -1){
+                out.write(buffer, 0, read);
+            }
+            out.flush();
+            fis.close();
+            String clientResponse = in.readUTF();
+            System.out.println(clientResponse);
+            out.writeUTF("Server: File has been sent");
+
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+
+
     }
 
     private void message(DataOutputStream out, DataInputStream in) {
@@ -80,11 +115,12 @@ public class ClientHandler implements Runnable{
             for (int i = 0; i < (size + (8 * 1024-1))/buffer.length ; i++) {
                 int read = in.read(buffer);
                 fos.write(buffer, 0, read);
-
             }
             fos.close();
+
             System.out.println("File '"+filename+"' uploaded from client to server");
             System.out.println();
+
             out.writeUTF("File '"+filename +"' with size = " + size + " bytes has been uploaded");
         }catch(Exception e){
             out.writeUTF("WRONG");
