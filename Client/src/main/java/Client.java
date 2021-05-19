@@ -26,9 +26,10 @@ public class Client extends JFrame {
         //create form
 
         setSize(300, 300);
-        JPanel panel = new JPanel(new GridLayout(3,1));
+        JPanel panel = new JPanel(new GridLayout(4,1));
         JButton btnSendMsg = new JButton("SEND Message");
         JButton btnUploadFile = new JButton("UPLOAD File");
+        JButton btnDownloadFile = new JButton("DOWNLOAD File");
 
         JTextField textField = new JTextField();
 
@@ -38,11 +39,6 @@ public class Client extends JFrame {
                 String message = textField.getText();
 
                 sendMessage(message);
-
-//                if("download".equals(cmd[0])){
-//                    getFile(cmd[1]);
-//                }
-
             }
         });
 
@@ -52,6 +48,16 @@ public class Client extends JFrame {
                 String filename = textField.getText();
 
                 sendFile(filename);
+
+            }
+        });
+
+        btnDownloadFile.addActionListener(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String filename = textField.getText();
+
+                getFile(filename);
 
             }
         });
@@ -69,6 +75,7 @@ public class Client extends JFrame {
         panel.add(textField);
         panel.add(btnSendMsg);
         panel.add(btnUploadFile);
+        panel.add(btnDownloadFile);
 
         add(panel);
         setVisible(true);
@@ -84,9 +91,42 @@ public class Client extends JFrame {
             e.printStackTrace();
         }
     }
-
+    /*
+      При вводе имени файла и нажатии на кнопку "DOWNLOAD file", будет произведена попытка скачать файл с сервера.
+       */
     private void getFile(String filename) {
-        //TODO:
+        try{
+            this.out.writeUTF("#download");
+            this.out.writeUTF(filename);
+
+
+            long size = in.readLong(); //принимаем размер файла от сервера
+            if(size == -1){
+                System.out.println("There is no such file on a Server: " + filename);
+                return;
+            }
+            System.out.println("Size of file requested: "+ size +" bytes");
+
+
+            File file = new File("Client/client_files/" + filename); // read file name
+            FileOutputStream fos = new FileOutputStream(file);
+            byte[] buffer = new byte[8 * 1024];
+            for (int i = 0; i < (size + (8 * 1024-1))/buffer.length ; i++) {
+                int read = in.read(buffer);
+                fos.write(buffer, 0, read);
+            }
+            fos.close();
+            System.out.println("File '"+filename+"' downloaded from server to client");
+            out.writeUTF("Client: File has been recieved");
+            System.out.println();
+
+            String response = in.readUTF();
+            System.out.println(response);
+
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     private void sendFile(String filename) {
@@ -106,10 +146,10 @@ public class Client extends JFrame {
             int read = 0;
             byte[] buffer = new byte[8 * 1024];
             while((read = fis.read(buffer)) != -1){
-                this.out.write(buffer, 0, read);
+                out.write(buffer, 0, read);
             }
-            this.out.flush();
-
+            out.flush();
+            fis.close();
             String response = in.readUTF();
             System.out.println(response);
         }catch (FileNotFoundException e){
