@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox fx:id="mainPanel" alignment="center" xmlns="http://javafx.com/javafx/8.0.291" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller" >
+
+    <MenuBar>
+        <Menu text="File">
+            <MenuItem text="Exit" onAction="#btnExitAction" />
+        </Menu>
+    </MenuBar>
+    <HBox VBox.vgrow="ALWAYS">
+        <fx:include fx:id="clientPanel" source="clientPanel.fxml" HBox.hgrow="ALWAYS"/>
+        <fx:include fx:id="serverPanel" source="serverPanel.fxml" HBox.hgrow="ALWAYS"/>
+    </HBox>
+    <HBox spacing="5.0">
+        <Button fx:id="btnCreateDirClient" maxWidth="Infinity" focusTraversable="false" text="Create Directory(client)" HBox.hgrow="ALWAYS" onAction="#btnCreateDirClient" />
+        <Button fx:id="btnDeleteFile" maxWidth="Infinity" focusTraversable="false" text="Delete" HBox.hgrow="ALWAYS" onAction="#btnDeleteFile"/>
+        <Button fx:id="btnUploadFile" maxWidth="Infinity" focusTraversable="false" text="Upload File" HBox.hgrow="ALWAYS" onAction="#btnUploadFile" />
+        <Button fx:id="btnDownloadFile" maxWidth="Infinity" focusTraversable="false" text="Download File" HBox.hgrow="ALWAYS" onAction="#btnDownloadFile" />
+
+        <Button fx:id="btnCreateDirServer" maxWidth="Infinity" focusTraversable="false" text="Create Directory(server)" HBox.hgrow="ALWAYS" onAction="#btnCreateDirServer" />
+
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+        </padding>
+    </HBox>
+    <properties>
+        <ctrl>
+            <fx:reference source="controller"/>
+        </ctrl>
+    </properties>
+</VBox>
