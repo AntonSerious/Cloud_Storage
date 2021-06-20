@@ -24,13 +24,6 @@ public class Connection {
         }
     }
 
-//    public DataInputStream getIn(){
-//        return in;
-//    }
-//    public DataInputStream getOut(){
-//        return in;
-//    }
-
     public void sendCloseConnection() {
         try {
             out.writeUTF("#closeConnection");
@@ -104,32 +97,14 @@ public class Connection {
             e.printStackTrace();
         }
     }
-    public Path getRootPath(String userName){
-        try {
-            this.out.writeUTF("#getRootPath");
-            this.out.writeUTF(userName);
-            String rootPath = in.readUTF();
-            System.out.println(rootPath);
-            return Paths.get(rootPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
     public List<FileInfo> getFileList(Path rootPath){
         List<FileInfo> fileList;
-        //Path rootPath = Paths.get(getRootPath());
         try {
             this.out.writeUTF("#getFileList");
             this.out.writeUTF(rootPath.toString());
             ObjectInputStream ois = new ObjectInputStream(in);
 
             fileList = (List<FileInfo>) ois.readObject();
-//            for (FileInfo f: fileList
-//                 ) {
-//                System.out.println(f.getFilename());
-//            }
-            //spc.updateFileTable(rootPath, fileList);
             return fileList;
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();

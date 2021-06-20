@@ -27,7 +27,6 @@ public class ClientHandler implements Runnable{
         ){
             while(true){
                 String command = in.readUTF();
-                //System.out.println(command);
 
                 if("#getRootPath".equals(command)){
                     System.out.println("command is coming from client: #getRootPath");
@@ -62,8 +61,6 @@ public class ClientHandler implements Runnable{
                     System.out.println("command is coming from client: #createDir");
                     createDir(out, in);
                 }
-
-
                 if("#closeConnection".equals(command)){
                     System.out.println("command is coming from client: #closeConnection");
                     out.writeUTF("GoodBye");
@@ -72,7 +69,6 @@ public class ClientHandler implements Runnable{
                     System.out.println();
                     break;
                 }
-
             }
         }catch(SocketException socketException){
             System.out.printf("Client %s disconnected\n", socket.getInetAddress());

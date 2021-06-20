@@ -19,12 +19,9 @@ import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
     public VBox mainPanel;
-    public Button btnCreateDir;
     public Button btnDeleteFile;
     Connection connection;
-//    Socket socket;
-//    DataOutputStream out;
-//    DataInputStream in;
+
     private String userName = "anemchenko";
     @FXML
     VBox clientPanel, serverPanel;
@@ -33,8 +30,6 @@ public class Controller implements Initializable {
     Button btnUploadFile;
     @FXML
     Button btnDownloadFile;
-    @FXML
-    Button btnRefresh;
 
 
     ClientPanelController cpc;
@@ -54,17 +49,6 @@ public class Controller implements Initializable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-//        try {
-//            this.socket = new Socket("localhost", 6789);
-//            this.out = new DataOutputStream(socket.getOutputStream());
-//            this.in = new DataInputStream(socket.getInputStream());
-//
-//            cpc = (ClientPanelController) clientPanel.getProperties().get("ctrl");
-//            spc = (ServerPanelController) serverPanel.getProperties().get("ctrl");
-//            spc.setMainController(this);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
 
     }
 
