@@ -1,10 +1,18 @@
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class ClientHandler implements Runnable{
 
+
     private final Socket socket;  //сокет подключенного клиента
+    private final Path pathBase = Paths.get(".").toAbsolutePath().normalize();
 
     public ClientHandler(Socket socket){
         this.socket = socket;
@@ -19,7 +27,19 @@ public class ClientHandler implements Runnable{
         ){
             while(true){
                 String command = in.readUTF();
-                //System.out.println(command);
+
+                if("#getRootPath".equals(command)){
+                    System.out.println("command is coming from client: #getRootPath");
+                    getUserDir(out, in);
+                }
+                if("#getFileList".equals(command)){
+                    System.out.println("command is coming from client: #getFileList");
+                    getUserFileList(out, in);
+                }
+                if("#isDirectory".equals(command)){
+                    System.out.println("command is coming from client: #isDirectory");
+                    isDirectory(out, in);
+                }
 
                 if("#upload".equals(command)){
                     System.out.println("command is coming from client: #upload");
@@ -33,7 +53,14 @@ public class ClientHandler implements Runnable{
                     System.out.println("command is coming from client: #download");
                     download(out, in);
                 }
-
+                if("#delete".equals(command)){
+                    System.out.println("command is coming from client: #delete");
+                    delete(out, in);
+                }
+                if("#createDir".equals(command)){
+                    System.out.println("command is coming from client: #createDir");
+                    createDir(out, in);
+                }
                 if("#closeConnection".equals(command)){
                     System.out.println("command is coming from client: #closeConnection");
                     out.writeUTF("GoodBye");
@@ -42,7 +69,6 @@ public class ClientHandler implements Runnable{
                     System.out.println();
                     break;
                 }
-
             }
         }catch(SocketException socketException){
             System.out.printf("Client %s disconnected\n", socket.getInetAddress());
@@ -52,12 +78,78 @@ public class ClientHandler implements Runnable{
         }
     }
 
-    private void download(DataOutputStream out, DataInputStream in) throws IOException {
+    private void createDir(DataOutputStream out, DataInputStream in) {
         try {
-            String filename = in.readUTF(); //Принимаем от клиента имя файла для скачивания
-            System.out.println("Request of downloading the file: " + filename);
+            String dirPath = in.readUTF();
+            Path absolutePath = Paths.get(pathBase.toString(), dirPath);
+            if(Files.exists(absolutePath)) {
+                out.writeUTF("WRONG");
+            }
+            else{
+                Files.createDirectory(absolutePath);
+                out.writeUTF(dirPath + " is created");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
-            File file = new File("Server/server_files/"+ filename);
+    private void delete(DataOutputStream out, DataInputStream in) {
+        try {
+            String filePath = in.readUTF();
+            Path absolutePath = Paths.get(pathBase.toString(), filePath);
+            Files.deleteIfExists(absolutePath);
+            out.writeUTF(filePath + " is deleted");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void isDirectory(DataOutputStream out, DataInputStream in) {
+        try {
+            String newPath = in.readUTF();
+            Path absolutePath = Paths.get(pathBase.toString(), newPath);
+            out.writeBoolean(Files.isDirectory(absolutePath));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void getUserFileList(DataOutputStream out, DataInputStream in) {
+        try {
+            Path pathRelative =  Paths.get(in.readUTF());
+            Path pathAbsolute = Paths.get(pathBase.toString()).resolve(pathRelative);
+            if(!Files.exists(pathAbsolute)){
+                Files.createDirectory(pathAbsolute);
+            }
+            List<FileInfo> fileList = Files.list(pathAbsolute).map(FileInfo::new).collect(Collectors.toList());
+            ObjectOutputStream oos = new ObjectOutputStream(out);
+            oos.writeObject(fileList);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void getUserDir(DataOutputStream out, DataInputStream in) {
+        try {
+            String user = in.readUTF();
+            if("anemchenko".equals(user)){
+                String pathRelative = "anemchenko/";
+                out.writeUTF(pathRelative);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void download(DataOutputStream out, DataInputStream in) {
+        try {
+            String filePath = in.readUTF(); //Принимаем от клиента имя файла для скачивания
+            System.out.println("Request of downloading the file: " + filePath);
+
+            File file = new File(Paths.get(pathBase.toString(),filePath).toUri());
             if(!file.exists()){
                 out.writeLong(-1);
                 throw new FileNotFoundException();
@@ -68,7 +160,7 @@ public class ClientHandler implements Runnable{
 
             System.out.println("Sending the file...");
             FileInputStream fis = new FileInputStream(file); //Отправялем сам файл
-            int read = 0;
+            int read;
             byte[] buffer = new byte[8 * 1024];
             while((read = fis.read(buffer)) != -1){
                 out.write(buffer, 0, read);
@@ -104,7 +196,8 @@ public class ClientHandler implements Runnable{
         try{
             String filename = in.readUTF();
             long size = in.readLong();
-            File file = new File("Server/server_files/" + filename); // read file name
+            String uploadToDir = in.readUTF();
+            File file = new File(Paths.get(pathBase.toString(), uploadToDir, filename).toUri()); // read file name
             System.out.println("File is being uploaded from client: " + filename);
             if(!file.exists()){
                 file.createNewFile();
