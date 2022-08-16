@@ -18,3 +18,4 @@
 <li>Сортировка по типу файла, имени, размеру</li>
 </ol>
 
+![Screenshot_1.png](Screenshot_2.png)
